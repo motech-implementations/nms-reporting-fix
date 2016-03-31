@@ -4,12 +4,14 @@ import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 import org.motechproject.nms.reportfix.config.ConfigReader;
 import org.motechproject.nms.reportfix.kilkari.KilkariFixer;
 
+import java.text.ParseException;
+
 /**
  * Main class to run fix nms reporting
  */
 public class ReportFix {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ParseException{
         System.out.println("Hello World");
 
         System.out.println("Loading properties");
@@ -18,7 +20,7 @@ public class ReportFix {
         System.out.println("Loaded config");
 
 
-        KilkariFixer kilkariFixer = new KilkariFixer(setProdDataSource(configReader), setReportDataSource(configReader));
+        KilkariFixer kilkariFixer = new KilkariFixer(setProdDataSource(configReader), setReportDataSource(configReader), configReader);
         kilkariFixer.start();
     }
 
