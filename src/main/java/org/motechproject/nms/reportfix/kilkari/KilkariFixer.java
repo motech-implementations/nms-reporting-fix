@@ -3,7 +3,10 @@ package org.motechproject.nms.reportfix.kilkari;
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 import org.motechproject.nms.reportfix.config.ConfigReader;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -69,5 +72,44 @@ public class KilkariFixer {
         DateFormat format = new SimpleDateFormat("yyyyMMddhhmmss");
         Date fileDate = format.parse(fileName.split("_")[3]);
         System.out.println(fileDate);
+
+        loadFile(currentFile);
     }
+
+    private void loadFile(File currentFile) {
+        String currentLine;
+
+        try (BufferedReader br = new BufferedReader(new FileReader(currentFile))) {
+            int lineCount = 0;
+
+            while ((currentLine = br.readLine()) != null) {
+                if (lineCount == 0) {
+                    lineCount++;
+                    continue;
+                }
+
+                CdrRow currentRow = new CdrRow();
+                String[] properties = currentLine.split(",");
+                currentRow.setSubscriptionId(properties[0].split(":")[1]);
+                currentRow.setPhoneNumber(properties[1]);
+                currentRow.setStartTime(new Date(Long.parseLong(properties[4]) * 1000));
+                currentRow.setAnswerTime(new Date(Long.parseLong(properties[5]) * 1000));
+                currentRow.setEndTime(new Date(Long.parseLong(properties[6]) * 1000));
+                currentRow.setCallDurationInPulses(Integer.parseInt(properties[7]));
+                currentRow.setCallStatus(Integer.parseInt(properties[8]));
+                currentRow.setLlId(Integer.parseInt(properties[9]));
+                currentRow.setContentFilename(properties[10]);
+                currentRow.setMsgStartTime(new Date(Long.parseLong(properties[11]) * 1000));
+                currentRow.setMsgEndTime(new Date(Long.parseLong(properties[12]) * 1000));
+                currentRow.setCircle(properties[13]);
+                currentRow.setOperator(properties[14]);
+                currentRow.setCallDisconnectReason(Integer.parseInt(properties[16]));
+                currentRow.setWeekId(properties[17]);
+            }
+
+        } catch (IOException ioe) {
+            System.out.println(ioe.toString());
+        }
+    }
+
 }
