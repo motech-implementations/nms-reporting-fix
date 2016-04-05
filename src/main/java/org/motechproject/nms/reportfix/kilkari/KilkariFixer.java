@@ -2,6 +2,10 @@ package org.motechproject.nms.reportfix.kilkari;
 
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 import org.motechproject.nms.reportfix.config.ConfigReader;
+import org.motechproject.nms.reportfix.kilkari.cache.LookupCache;
+import org.motechproject.nms.reportfix.kilkari.constants.KilkariConstants;
+import org.motechproject.nms.reportfix.kilkari.domain.CdrRow;
+import org.motechproject.nms.reportfix.kilkari.helpers.Parser;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -24,37 +28,35 @@ public class KilkariFixer {
     private MysqlDataSource production;
     private MysqlDataSource reporting;
     private ConfigReader configReader;
+    private LookupCache lookupCache;
+
+
 
     public KilkariFixer(MysqlDataSource prod, MysqlDataSource reporting, ConfigReader configReader) {
         this.production = prod;
         this.reporting = reporting;
         this.configReader = configReader;
+        lookupCache = new LookupCache();
     }
 
     public void start() throws ParseException {
-        Connection prod = null;
-        Connection report = null;
         System.out.println("Fixing Kilkari data");
-        try {
-            prod = production.getConnection();
-            report = reporting.getConnection();
-            getCallCount(report, "October", 2015);
+        try (Connection prod = production.getConnection(); Connection report = reporting.getConnection()){
+            // getCallCount(report, "October", 2015);
+            lookupCache.initialize(reporting, production);
             File directory = new File(configReader.getProperty("cdr.directory"));
             for (File currentFile : directory.listFiles()) {
                 ingestFile(currentFile);
             }
         } catch (SQLException sqle) {
             System.out.println("Unable to connect to motech or reporting db: " + sqle.toString());
-            return;
-        } // todo: close connection?
+        }
     }
 
     private void getCallCount(Connection connection, String monthName, int year) {
         Statement statement = null;
         ResultSet rs = null;
-        String query = String.format("SELECT count(*) as monthlyCount FROM date_dimension as dd " +
-                "join subscriber_call_measure as scm on scm.Start_Date_ID = dd.ID " +
-                "where DimMonth = '%s' and DimYear = '%d'", monthName, year);
+        String query = String.format(KilkariConstants.getCallCountSql, monthName, year);
 
         try {
             statement = connection.createStatement();
@@ -64,7 +66,7 @@ public class KilkariFixer {
             }
         } catch (SQLException sqle) {
             System.out.println("Cannot get results from db: " + sqle.toString());
-        } // todo: close shit
+        } // todo: close statement and resultset?
     }
 
     private void ingestFile(File currentFile) throws ParseException {
@@ -92,24 +94,25 @@ public class KilkariFixer {
                 String[] properties = currentLine.split(",");
                 currentRow.setSubscriptionId(properties[0].split(":")[1]);
                 currentRow.setPhoneNumber(properties[1]);
-                currentRow.setStartTime(new Date(Long.parseLong(properties[4]) * 1000));
-                currentRow.setAnswerTime(new Date(Long.parseLong(properties[5]) * 1000));
-                currentRow.setEndTime(new Date(Long.parseLong(properties[6]) * 1000));
-                currentRow.setCallDurationInPulses(Integer.parseInt(properties[7]));
-                currentRow.setCallStatus(Integer.parseInt(properties[8]));
-                currentRow.setLlId(Integer.parseInt(properties[9]));
+                currentRow.setAttemptNumber(Parser.parseInt(properties[3]));
+                currentRow.setStartTime(Parser.parseDate(properties[4]));
+                currentRow.setAnswerTime(Parser.parseDate(properties[5]));
+                currentRow.setEndTime(Parser.parseDate(properties[6]));
+                currentRow.setCallDurationInPulses(Parser.parseInt(properties[7]));
+                currentRow.setCallStatus(Parser.parseInt(properties[8]));
+                currentRow.setLlId(Parser.parseInt(properties[9]));
                 currentRow.setContentFilename(properties[10]);
-                currentRow.setMsgStartTime(new Date(Long.parseLong(properties[11]) * 1000));
-                currentRow.setMsgEndTime(new Date(Long.parseLong(properties[12]) * 1000));
+                currentRow.setMsgStartTime(Parser.parseDate(properties[11]));
+                currentRow.setMsgEndTime(Parser.parseDate(properties[12]));
                 currentRow.setCircle(properties[13]);
                 currentRow.setOperator(properties[14]);
-                currentRow.setCallDisconnectReason(Integer.parseInt(properties[16]));
                 currentRow.setWeekId(properties[17]);
             }
-
         } catch (IOException ioe) {
             System.out.println(ioe.toString());
         }
     }
+
+
 
 }

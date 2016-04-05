@@ -1,4 +1,4 @@
-package org.motechproject.nms.reportfix.kilkari;
+package org.motechproject.nms.reportfix.kilkari.domain;
 
 import java.util.Date;
 
@@ -6,21 +6,21 @@ import java.util.Date;
  * Class to represent each row in a CDR file
  */
 public class CdrRow {
-    String subscriptionId;
-    String phoneNumber;
-    Date startTime;
-    Date answerTime;
-    Date endTime;
-    int callDurationInPulses;
-    int callStatus;
-    int llId;
-    String contentFilename;
-    Date msgStartTime;
-    Date msgEndTime;
-    String circle;
-    String operator;
-    int callDisconnectReason;
-    String weekId;
+    private String subscriptionId;
+    private String phoneNumber;
+    private int attemptNumber;
+    private Date startTime;
+    private Date answerTime;
+    private Date endTime;
+    private int callDurationInPulses;
+    private int callStatus;
+    private int llId;
+    private String contentFilename;
+    private Date msgStartTime;
+    private Date msgEndTime;
+    private String circle;
+    private String operator;
+    private String weekId;
 
     public String getSubscriptionId() {
         return subscriptionId;
@@ -36,6 +36,14 @@ public class CdrRow {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public int getAttemptNumber() {
+        return attemptNumber;
+    }
+
+    public void setAttemptNumber(int attemptNumber) {
+        this.attemptNumber = attemptNumber;
     }
 
     public Date getStartTime() {
@@ -124,14 +132,6 @@ public class CdrRow {
 
     public void setOperator(String operator) {
         this.operator = operator;
-    }
-
-    public int getCallDisconnectReason() {
-        return callDisconnectReason;
-    }
-
-    public void setCallDisconnectReason(int callDisconnectReason) {
-        this.callDisconnectReason = callDisconnectReason;
     }
 
     public String getWeekId() {
