@@ -141,4 +141,28 @@ public class LookupCache {
         System.out.println("Campaign message cache filled: " + campaignMessageCache.size() + " items");
 
     }
+
+    public String getCallStatus(int status) {
+        return callStatusMap.get(status);
+    }
+
+    public int getDateId(String date) {
+        return dateCache.get(date);
+    }
+
+    public int getTimeId(String time) {
+        return timeCache.get(time);
+    }
+
+    public int getOperatorId(String operator) {
+        return operatorCache.get(operator);
+    }
+
+    public int getMessageDuration(String message) {
+        return messageDurationCache.get(message);
+    }
+
+    public int getCampaignId(String weekId) {
+        return campaignMessageCache.get(weekId);
+    }
 }

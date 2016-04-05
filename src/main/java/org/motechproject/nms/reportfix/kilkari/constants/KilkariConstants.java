@@ -5,7 +5,6 @@ package org.motechproject.nms.reportfix.kilkari.constants;
  */
 public final class KilkariConstants {
 
-
     /**
      * Queries for kilkari reporting lookup
      */
@@ -22,5 +21,18 @@ public final class KilkariConstants {
     public static final String getMessageDurationCacheSql = "SELECT Campaign_ID, Message_Duration FROM ananya_kilkari.campaign_dimension";
 
     public static final String getCampaignMessageCacheSql = "SELECT Campaign_ID, ID FROM ananya_kilkari.campaign_dimension";
+
+    /**
+     * Query for data insert
+     */
+    public static final String insertCdrRowSql = "INSERT INTO subscriber_call_measure\n"+
+            "(Subscription_ID, Operator_ID, Subscription_Pack_ID, Campaign_ID, \n"+
+            "Start_Date_ID, End_Date_ID, Start_Time_ID, End_Time_ID, State_ID, \n"+
+            "Call_Status, Duration, Service_Option, Percentage_Listened, Call_Source, \n"+
+            "Subscription_Status, Duration_In_Pulse, Call_Start_Time, Call_End_Time, \n"+
+            "Attempt_Number, Subscription_Start_Date, msg_duration, modificationDate)\n"+
+            "VALUES\n"+
+            "();";
+
 
 }
