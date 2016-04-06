@@ -31,20 +31,20 @@ public class CdrProcessor {
         this.lookupCache = lookupCache;
         File directory = new File(directoryPath);
         for (File currentFile : directory.listFiles()) {
-            ingestFile(currentFile);
+            loadFile(currentFile);
         }
     }
 
-    private void ingestFile(File currentFile) throws ParseException {
+    private void loadFile(File currentFile) throws ParseException {
         String fileName = currentFile.getName();
         DateFormat format = new SimpleDateFormat("yyyyMMddhhmmss");
         Date fileDate = format.parse(fileName.split("_")[3]);
         System.out.println(fileDate);
 
-        loadFile(currentFile);
+        ingestFile(currentFile);
     }
 
-    private void loadFile(File currentFile) {
+    private void ingestFile(File currentFile) {
         String currentLine;
 
         try (BufferedReader br = new BufferedReader(new FileReader(currentFile))) {
