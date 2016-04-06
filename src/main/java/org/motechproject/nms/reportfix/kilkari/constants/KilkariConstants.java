@@ -34,7 +34,9 @@ public final class KilkariConstants {
             "Subscription_Status, Duration_In_Pulse, Call_Start_Time, Call_End_Time, \n"+
             "Attempt_Number, Subscription_Start_Date, msg_duration, modificationDate)\n"+
             "VALUES\n"+
-            "();";
-
-
+            "(%d, %d, %d, %d," +
+            " %d, %d, %d, %d, %s," +
+            " '%s', %d, '%s', %d, '%s'," +
+            " '%s', %d, '%s', '%s'," +
+            " %d, '%s', %d, '%s');";
 }
