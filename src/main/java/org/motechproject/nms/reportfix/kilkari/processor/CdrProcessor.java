@@ -78,21 +78,21 @@ public class CdrProcessor {
 
                 CdrRow currentRow = new CdrRow();
                 String[] properties = currentLine.split(",");
-                currentRow.setSubscriptionId(properties[0].split(":")[1]);
-                currentRow.setPhoneNumber(properties[1]);
-                currentRow.setAttemptNumber(Parser.parseInt(properties[3]));
-                currentRow.setStartTime(Parser.parseDate(properties[4]));
-                currentRow.setAnswerTime(Parser.parseDate(properties[5]));
-                currentRow.setEndTime(Parser.parseDate(properties[6]));
-                currentRow.setCallDurationInPulses(Parser.parseInt(properties[7]));
-                currentRow.setCallStatus(Parser.parseInt(properties[8]));
-                currentRow.setLlId(Parser.parseInt(properties[9]));
-                currentRow.setContentFilename(properties[10]);
-                currentRow.setMsgStartTime(Parser.parseDate(properties[11]));
-                currentRow.setMsgEndTime(Parser.parseDate(properties[12]));
-                currentRow.setCircle(properties[13]);
-                currentRow.setOperator(properties[14]);
-                currentRow.setWeekId(properties[17]);
+                currentRow.setSubscriptionId(properties[0].trim().split(":")[1].trim());
+                currentRow.setPhoneNumber(properties[1].trim());
+                currentRow.setAttemptNumber(Parser.parseInt(properties[3].trim()));
+                currentRow.setStartTime(Parser.parseDate(properties[4].trim()));
+                currentRow.setAnswerTime(Parser.parseDate(properties[5].trim()));
+                currentRow.setEndTime(Parser.parseDate(properties[6].trim()));
+                currentRow.setCallDurationInPulses(Parser.parseInt(properties[7].trim()));
+                currentRow.setCallStatus(Parser.parseInt(properties[8].trim()));
+                currentRow.setLlId(Parser.parseInt(properties[9].trim()));
+                currentRow.setContentFilename(properties[10].trim());
+                currentRow.setMsgStartTime(Parser.parseDate(properties[11].trim()));
+                currentRow.setMsgEndTime(Parser.parseDate(properties[12].trim()));
+                currentRow.setCircle(properties[13].trim());
+                currentRow.setOperator(properties[14].trim());
+                currentRow.setWeekId(properties[17].trim());
 
                 if (saveRow(currentRow, repcon)) {
                     saved++;
@@ -122,7 +122,7 @@ public class CdrProcessor {
         DateFormat timeFormatStamp = new SimpleDateFormat("HH:mm:ss");
         DateFormat modificationFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-        // casing here matches db columns. #donthatetheplayerhatethegame
+        // name casing here matches db columns. #donthatetheplayerhatethegame
         long Subscription_ID = si.getId();
         int Operator_ID = lookupCache.getOperatorId(cdrRow.getOperator());
         int Subscription_Pack_ID = si.getPackId();
@@ -154,7 +154,7 @@ public class CdrProcessor {
                     modificationFormat.format(Subscription_Start_Date), msg_duration, modificationFormat.format(new Date())); // change modification date?
             statement.executeUpdate(query);
         } catch (SQLException sqle) {
-            System.out.println("Could not add row: " + sqle.toString());
+            // System.out.println("Could not add row: " + sqle.toString());
             if (sqle.toString().contains("Duplicate entry")) {
                 totalDuplicates++;
             }
