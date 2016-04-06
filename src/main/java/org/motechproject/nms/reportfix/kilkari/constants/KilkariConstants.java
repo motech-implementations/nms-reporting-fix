@@ -36,7 +36,7 @@ public final class KilkariConstants {
             "VALUES\n"+
             "(%d, %d, %d, %d," +
             " %d, %d, %d, %d, %s," +
-            " '%s', %d, '%s', %d, '%s'," +
+            " '%s', %d, %s, %d, '%s'," +
             " '%s', %d, '%s', '%s'," +
             " %d, '%s', %d, '%s');";
 }

@@ -28,6 +28,10 @@ public class CdrProcessor {
     private LookupCache lookupCache;
     private MysqlDataSource reporting;
 
+    private int totalLines;
+    private int totalDuplicates;
+    private int totalSaved;
+
     public CdrProcessor() {
     }
 
@@ -42,6 +46,8 @@ public class CdrProcessor {
         for (File currentFile : directory.listFiles()) {
             loadFile(currentFile);
         }
+
+        System.out.println(String.format("%s processed. Total records: %d, Saved: %d, Duplicates: %d", directoryPath, totalLines, totalSaved, totalDuplicates));
     }
 
     private void loadFile(File currentFile) throws ParseException {
@@ -51,9 +57,9 @@ public class CdrProcessor {
         System.out.println(fileDate);
 
         DateFormat logDateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-        System.out.println("Start - " + logDateFormat.format(new Date()));
+        System.out.println(fileName + " Start - " + logDateFormat.format(new Date()));
         ingestFile(currentFile);
-        System.out.println("End - " + logDateFormat.format(new Date()));
+        System.out.println(fileName + " End - " + logDateFormat.format(new Date()));
     }
 
     private void ingestFile(File currentFile) {
@@ -92,12 +98,14 @@ public class CdrProcessor {
                     saved++;
                 }
                 lineCount++;
-                if (lineCount % 100 == 0) {
+                if (lineCount % 1000 == 0) {
                     System.out.println(logDateFormat.format(new Date()) + " Progress: Read - " + lineCount + ", Saved - " + saved);
                 }
             }
             System.out.println("Read " + lineCount + " lines from file: " + currentFile.getName());
             System.out.println("Saved " + saved + " call detail records");
+            totalLines += lineCount;
+            totalSaved += saved;
         } catch (IOException|SQLException ex) {
             System.out.println(ex.toString());
         }
@@ -147,6 +155,9 @@ public class CdrProcessor {
             statement.executeUpdate(query);
         } catch (SQLException sqle) {
             System.out.println("Could not add row: " + sqle.toString());
+            if (sqle.toString().contains("Duplicate entry")) {
+                totalDuplicates++;
+            }
             return false;
         }
 
