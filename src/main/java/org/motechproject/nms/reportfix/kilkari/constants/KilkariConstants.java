@@ -22,6 +22,8 @@ public final class KilkariConstants {
 
     public static final String getCampaignMessageCacheSql = "SELECT Campaign_ID, ID FROM ananya_kilkari.campaign_dimension";
 
+    public static final String getSubscriptionInfoSql = "select Subscription_ID, Subscriber_Pack_ID, Start_Date  from subscriptions where SubscriptionId = '%s'";
+
     /**
      * Query for data insert
      */

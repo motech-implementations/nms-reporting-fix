@@ -45,7 +45,7 @@ public class KilkariFixer {
         try (Connection prod = production.getConnection(); Connection report = reporting.getConnection()){
             // getCallCount(report, "October", 2015);
             lookupCache.initialize(reporting, production);
-            cdrProcessor.startProcessor(configReader.getProperty("cdr.directory"), lookupCache);
+            cdrProcessor.startProcessor(configReader.getProperty("cdr.directory"), lookupCache, reporting);
         } catch (SQLException sqle) {
             System.out.println("Unable to connect to motech or reporting db: " + sqle.toString());
         }

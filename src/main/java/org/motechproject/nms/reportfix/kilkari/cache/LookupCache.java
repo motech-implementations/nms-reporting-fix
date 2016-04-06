@@ -2,6 +2,7 @@ package org.motechproject.nms.reportfix.kilkari.cache;
 
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 import org.motechproject.nms.reportfix.kilkari.constants.KilkariConstants;
+import org.motechproject.nms.reportfix.kilkari.domain.SubscriptionInfo;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -24,6 +25,7 @@ public class LookupCache {
     private Map<String, Integer> messageDurationCache;
     private Map<String, Integer> operatorCache;
     private Map<Integer, String> callStatusMap;
+    private Map<String, SubscriptionInfo> subscriptionInfoCache;
 
     /**
      * Constructor
@@ -35,6 +37,7 @@ public class LookupCache {
         messageDurationCache = new HashMap<>();
         operatorCache = new HashMap<>();
         callStatusMap = new HashMap<>();
+        subscriptionInfoCache = new HashMap<>();
     }
 
     /**
@@ -164,5 +167,31 @@ public class LookupCache {
 
     public int getCampaignId(String weekId) {
         return campaignMessageCache.get(weekId);
+    }
+
+    public SubscriptionInfo getSubscriptionInfo (String subscriptionId) {
+        if (!subscriptionInfoCache.containsKey(subscriptionId)) {
+            fetchAndSaveSubscriptionInfo(subscriptionId);
+        }
+        return subscriptionInfoCache.get(subscriptionId);
+    }
+
+    private void fetchAndSaveSubscriptionInfo(String subscriptionId) {
+        SubscriptionInfo si = null;
+        try (Connection connection = this.reporting.getConnection()) {
+            Statement statement = connection.createStatement();
+            String query = String.format(KilkariConstants.getSubscriptionInfoSql, subscriptionId);
+            ResultSet rs = statement.executeQuery(query);
+
+            while (rs.next()) {
+                si = new SubscriptionInfo();
+                si.setId(rs.getLong("Subscription_ID"));
+                si.setPackId(rs.getInt("Subscriber_Pack_ID"));
+                si.setStartDate(rs.getTimestamp("Start_Date"));
+            }
+            subscriptionInfoCache.put(subscriptionId, si);
+        } catch (SQLException sqle) {
+            System.out.println("Cannot get subscriptionInfo: " + sqle.toString());
+        }
     }
 }
