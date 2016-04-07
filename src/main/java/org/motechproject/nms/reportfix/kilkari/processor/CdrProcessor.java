@@ -18,7 +18,10 @@ import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Processor to read cdr files and store them
@@ -40,13 +43,21 @@ public class CdrProcessor {
             return;
         }
 
+        Date startTime = new Date();
         this.lookupCache = lookupCache;
         this.reporting = reporting;
         File directory = new File(directoryPath);
-        for (File currentFile : directory.listFiles()) {
+        List<File> files = Arrays.asList(directory.listFiles());
+        Collections.sort(files);
+        System.out.println(String.format("Found %d files", files.size()));
+        int index = 1;
+        for (File currentFile : files) {
+            System.out.println(String.format("Loading file %d of %d", index, files.size()));
             loadFile(currentFile);
+            index += 1;
         }
-
+        Date endTime = new Date();
+        System.out.println("Start: " + startTime.toString() + " End: " + endTime.toString());
         System.out.println(String.format("%s processed. Total records: %d, Saved: %d, Duplicates: %d", directoryPath, totalLines, totalSaved, totalDuplicates));
     }
 
@@ -98,7 +109,7 @@ public class CdrProcessor {
                     saved++;
                 }
                 lineCount++;
-                if (lineCount % 1000 == 0) {
+                if (lineCount % 5000 == 0) {
                     System.out.println(logDateFormat.format(new Date()) + " Progress: Read - " + lineCount + ", Saved - " + saved);
                 }
             }
@@ -157,6 +168,9 @@ public class CdrProcessor {
             // System.out.println("Could not add row: " + sqle.toString());
             if (sqle.toString().contains("Duplicate entry")) {
                 totalDuplicates++;
+                if (totalDuplicates %100 == 0) {
+                    System.out.println("Duplicates: " + totalDuplicates);
+                }
             }
             return false;
         }

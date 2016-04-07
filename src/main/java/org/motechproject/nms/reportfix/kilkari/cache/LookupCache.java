@@ -27,6 +27,9 @@ public class LookupCache {
     private Map<Integer, String> callStatusMap;
     private Map<String, SubscriptionInfo> subscriptionInfoCache;
 
+    private int missing;
+    private int found;
+
     /**
      * Constructor
      */
@@ -188,6 +191,14 @@ public class LookupCache {
                 si.setId(rs.getLong("Subscription_ID"));
                 si.setPackId(rs.getInt("Subscriber_Pack_ID"));
                 si.setStartDate(rs.getTimestamp("Start_Date"));
+            }
+            if (si == null) {
+                missing++;
+            } else {
+                found++;
+            }
+            if (subscriptionInfoCache.size() % 1000 == 0) {
+                System.out.println(String.format("Subscription cache: %d Found: %d Missing: %d", subscriptionInfoCache.size(), found, missing));
             }
             subscriptionInfoCache.put(subscriptionId, si);
         } catch (SQLException sqle) {
