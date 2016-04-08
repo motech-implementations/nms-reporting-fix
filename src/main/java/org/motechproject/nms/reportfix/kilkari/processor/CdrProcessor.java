@@ -18,10 +18,11 @@ import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * Processor to read cdr files and store them
@@ -31,9 +32,9 @@ public class CdrProcessor {
     private LookupCache lookupCache;
     private MysqlDataSource reporting;
 
-    private int totalLines;
-    private int totalDuplicates;
-    private int totalSaved;
+    private static int totalLines;
+    private static int totalDuplicates;
+    private static int totalSaved;
 
     public CdrProcessor() {
     }
@@ -50,15 +51,35 @@ public class CdrProcessor {
         List<File> files = Arrays.asList(directory.listFiles());
         Collections.sort(files);
         System.out.println(String.format("Found %d files", files.size()));
-        int index = 1;
+        parallelLoadFiles(files);
+        /* int index = 1;
         for (File currentFile : files) {
             System.out.println(String.format("Loading file %d of %d", index, files.size()));
             loadFile(currentFile);
             index += 1;
         }
+        */
         Date endTime = new Date();
         System.out.println("Start: " + startTime.toString() + " End: " + endTime.toString());
         System.out.println(String.format("%s processed. Total records: %d, Saved: %d, Duplicates: %d", directoryPath, totalLines, totalSaved, totalDuplicates));
+    }
+
+    private void parallelLoadFiles(List<File> files) {
+        int threads = Runtime.getRuntime().availableProcessors();
+        ExecutorService service = Executors.newFixedThreadPool(threads);
+
+        List<Future<Void>> futures = new ArrayList<>();
+        for (final File file : files) {
+            Callable<Void> callable = new Callable<Void>() {
+                @Override
+                public Void call() throws Exception {
+                    loadFile(file);
+                    return null;
+                }
+            };
+            futures.add(service.submit(callable));
+        }
+        service.shutdown();
     }
 
     private void loadFile(File currentFile) throws ParseException {
@@ -109,7 +130,7 @@ public class CdrProcessor {
                     saved++;
                 }
                 lineCount++;
-                if (lineCount % 5000 == 0) {
+                if (lineCount % 10000 == 0) {
                     System.out.println(logDateFormat.format(new Date()) + " Progress: Read - " + lineCount + ", Saved - " + saved);
                 }
             }
@@ -168,7 +189,7 @@ public class CdrProcessor {
             // System.out.println("Could not add row: " + sqle.toString());
             if (sqle.toString().contains("Duplicate entry")) {
                 totalDuplicates++;
-                if (totalDuplicates %100 == 0) {
+                if (totalDuplicates % 10000 == 0) {
                     System.out.println("Duplicates: " + totalDuplicates);
                 }
             }

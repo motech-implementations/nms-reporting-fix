@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Lookup cache class to get date, time and other static IDs
@@ -40,7 +41,7 @@ public class LookupCache {
         messageDurationCache = new HashMap<>();
         operatorCache = new HashMap<>();
         callStatusMap = new HashMap<>();
-        subscriptionInfoCache = new HashMap<>();
+        subscriptionInfoCache = new ConcurrentHashMap<>();
     }
 
     /**
@@ -197,7 +198,7 @@ public class LookupCache {
             } else {
                 found++;
             }
-            if (subscriptionInfoCache.size() % 1000 == 0) {
+            if (subscriptionInfoCache.size() % 10000 == 0) {
                 System.out.println(String.format("Subscription cache: %d Found: %d Missing: %d", subscriptionInfoCache.size(), found, missing));
             }
             subscriptionInfoCache.put(subscriptionId, si);
