@@ -6,6 +6,7 @@ import org.motechproject.nms.reportfix.kilkari.constants.KilkariConstants;
 import org.motechproject.nms.reportfix.kilkari.domain.CdrRow;
 import org.motechproject.nms.reportfix.kilkari.domain.SubscriptionInfo;
 import org.motechproject.nms.reportfix.kilkari.helpers.Parser;
+import org.motechproject.nms.reportfix.logger.Logger;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -50,18 +51,18 @@ public class CdrProcessor {
         File directory = new File(directoryPath);
         List<File> files = Arrays.asList(directory.listFiles());
         Collections.sort(files);
-        System.out.println(String.format("Found %d files", files.size()));
+        Logger.log(String.format("Found %d files", files.size()));
         parallelLoadFiles(files);
         /* int index = 1;
         for (File currentFile : files) {
-            System.out.println(String.format("Loading file %d of %d", index, files.size()));
+            Logger.log(String.format("Loading file %d of %d", index, files.size()));
             loadFile(currentFile);
             index += 1;
         }
         */
         Date endTime = new Date();
-        System.out.println("Start: " + startTime.toString() + " End: " + endTime.toString());
-        System.out.println(String.format("%s processed. Total records: %d, Saved: %d, Duplicates: %d", directoryPath, totalLines, totalSaved, totalDuplicates));
+        Logger.log("Start: " + startTime.toString() + " End: " + endTime.toString());
+        Logger.log(String.format("%s processed. Total records: %d, Saved: %d, Duplicates: %d", directoryPath, totalLines, totalSaved, totalDuplicates));
     }
 
     private void parallelLoadFiles(List<File> files) {
@@ -86,12 +87,12 @@ public class CdrProcessor {
         String fileName = currentFile.getName();
         DateFormat format = new SimpleDateFormat("yyyyMMddhhmmss");
         Date fileDate = format.parse(fileName.split("_")[3]);
-        System.out.println(fileDate);
+        Logger.log(fileDate.toString());
 
         DateFormat logDateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-        System.out.println(fileName + " Start - " + logDateFormat.format(new Date()));
+        Logger.log(fileName + " Start - " + logDateFormat.format(new Date()));
         ingestFile(currentFile);
-        System.out.println(fileName + " End - " + logDateFormat.format(new Date()));
+        Logger.log(fileName + " End - " + logDateFormat.format(new Date()));
     }
 
     private void ingestFile(File currentFile) {
@@ -131,15 +132,15 @@ public class CdrProcessor {
                 }
                 lineCount++;
                 if (lineCount % 10000 == 0) {
-                    System.out.println(logDateFormat.format(new Date()) + " Progress: Read - " + lineCount + ", Saved - " + saved);
+                    Logger.log(logDateFormat.format(new Date()) + " Progress: Read - " + lineCount + ", Saved - " + saved);
                 }
             }
-            System.out.println("Read " + lineCount + " lines from file: " + currentFile.getName());
-            System.out.println("Saved " + saved + " call detail records");
+            Logger.log("Read " + lineCount + " lines from file: " + currentFile.getName());
+            Logger.log("Saved " + saved + " call detail records");
             totalLines += lineCount;
             totalSaved += saved;
         } catch (IOException|SQLException ex) {
-            System.out.println(ex.toString());
+            Logger.log(ex.toString());
         }
     }
 
@@ -186,11 +187,11 @@ public class CdrProcessor {
                     modificationFormat.format(Subscription_Start_Date), msg_duration, modificationFormat.format(new Date())); // change modification date?
             statement.executeUpdate(query);
         } catch (SQLException sqle) {
-            // System.out.println("Could not add row: " + sqle.toString());
+            // Logger.log("Could not add row: " + sqle.toString());
             if (sqle.toString().contains("Duplicate entry")) {
                 totalDuplicates++;
                 if (totalDuplicates % 10000 == 0) {
-                    System.out.println("Duplicates: " + totalDuplicates);
+                    Logger.log("Duplicates: " + totalDuplicates);
                 }
             }
             return false;

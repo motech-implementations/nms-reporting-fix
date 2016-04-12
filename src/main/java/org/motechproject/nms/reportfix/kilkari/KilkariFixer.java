@@ -7,6 +7,7 @@ import org.motechproject.nms.reportfix.kilkari.constants.KilkariConstants;
 import org.motechproject.nms.reportfix.kilkari.domain.CdrRow;
 import org.motechproject.nms.reportfix.kilkari.helpers.Parser;
 import org.motechproject.nms.reportfix.kilkari.processor.CdrProcessor;
+import org.motechproject.nms.reportfix.logger.Logger;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -41,13 +42,13 @@ public class KilkariFixer {
     }
 
     public void start() throws ParseException {
-        System.out.println("Fixing Kilkari data");
+        Logger.log("Fixing Kilkari data");
         try (Connection prod = production.getConnection(); Connection report = reporting.getConnection()){
             // getCallCount(report, "October", 2015);
             lookupCache.initialize(reporting, production);
             cdrProcessor.startProcessor(configReader.getProperty("cdr.directory"), lookupCache, reporting);
         } catch (SQLException sqle) {
-            System.out.println("Unable to connect to motech or reporting db: " + sqle.toString());
+            Logger.log("Unable to connect to motech or reporting db: " + sqle.toString());
         }
     }
 
@@ -60,10 +61,10 @@ public class KilkariFixer {
             statement = connection.createStatement();
             rs = statement.executeQuery(query);
             while(rs.next()) {
-                System.out.println(monthName + ": " + rs.getLong("monthlyCount"));
+                Logger.log(monthName + ": " + rs.getLong("monthlyCount"));
             }
         } catch (SQLException sqle) {
-            System.out.println("Cannot get results from db: " + sqle.toString());
+            Logger.log("Cannot get results from db: " + sqle.toString());
         } // todo: close statement and resultset?
     }
 

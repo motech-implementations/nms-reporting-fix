@@ -3,6 +3,7 @@ package org.motechproject.nms.reportfix.kilkari.cache;
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 import org.motechproject.nms.reportfix.kilkari.constants.KilkariConstants;
 import org.motechproject.nms.reportfix.kilkari.domain.SubscriptionInfo;
+import org.motechproject.nms.reportfix.logger.Logger;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -70,7 +71,7 @@ public class LookupCache {
         this.callStatusMap.put(2002, "NA"); // OBD_FAILED_NOANSWER
         this.callStatusMap.put(2003, "SO"); // OBD_FAILED_SWITCHEDOFF
 
-        System.out.println("Call status map filled: " + callStatusMap.size() + " items");
+        Logger.log("Call status map filled: " + callStatusMap.size() + " items");
     }
 
     private void initializeDateCache() {
@@ -82,10 +83,10 @@ public class LookupCache {
             }
 
         } catch (SQLException sqle) {
-            System.out.println("Cannot get date cache from reporting: " + sqle.toString());
+            Logger.log("Cannot get date cache from reporting: " + sqle.toString());
         }
 
-        System.out.println("Date cache filled: " + dateCache.size() + " items");
+        Logger.log("Date cache filled: " + dateCache.size() + " items");
     }
 
     private void initializeTimeCache() {
@@ -97,10 +98,10 @@ public class LookupCache {
             }
 
         } catch (SQLException sqle) {
-            System.out.println("Cannot get time cache from reporting: " + sqle.toString());
+            Logger.log("Cannot get time cache from reporting: " + sqle.toString());
         }
 
-        System.out.println("Time cache filled: " + timeCache.size() + " items");
+        Logger.log("Time cache filled: " + timeCache.size() + " items");
     }
 
     private void initializeOperatorCache() {
@@ -112,10 +113,10 @@ public class LookupCache {
             }
 
         } catch (SQLException sqle) {
-            System.out.println("Cannot get operator cache from reporting: " + sqle.toString());
+            Logger.log("Cannot get operator cache from reporting: " + sqle.toString());
         }
 
-        System.out.println("Operator cache filled: " + operatorCache.size() + " items");
+        Logger.log("Operator cache filled: " + operatorCache.size() + " items");
     }
 
     private void initializeMessageDurationCache() {
@@ -127,10 +128,10 @@ public class LookupCache {
             }
 
         } catch (SQLException sqle) {
-            System.out.println("Cannot get message duration cache from reporting: " + sqle.toString());
+            Logger.log("Cannot get message duration cache from reporting: " + sqle.toString());
         }
 
-        System.out.println("Message duration cache filled: " + messageDurationCache.size() + " items");
+        Logger.log("Message duration cache filled: " + messageDurationCache.size() + " items");
     }
 
     private void initializeCampaignMessageCache() {
@@ -142,10 +143,10 @@ public class LookupCache {
             }
 
         } catch (SQLException sqle) {
-            System.out.println("Cannot get message duration cache from reporting: " + sqle.toString());
+            Logger.log("Cannot get message duration cache from reporting: " + sqle.toString());
         }
 
-        System.out.println("Campaign message cache filled: " + campaignMessageCache.size() + " items");
+        Logger.log("Campaign message cache filled: " + campaignMessageCache.size() + " items");
 
     }
 
@@ -199,11 +200,11 @@ public class LookupCache {
                 found++;
             }
             if (subscriptionInfoCache.size() % 10000 == 0) {
-                System.out.println(String.format("Subscription cache: %d Found: %d Missing: %d", subscriptionInfoCache.size(), found, missing));
+                Logger.log(String.format("Subscription cache: %d Found: %d Missing: %d", subscriptionInfoCache.size(), found, missing));
             }
             subscriptionInfoCache.put(subscriptionId, si);
         } catch (SQLException sqle) {
-            System.out.println("Cannot get subscriptionInfo: " + sqle.toString());
+            Logger.log("Cannot get subscriptionInfo: " + sqle.toString());
         }
     }
 }

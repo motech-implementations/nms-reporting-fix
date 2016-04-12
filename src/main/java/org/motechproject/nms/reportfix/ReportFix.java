@@ -3,6 +3,7 @@ package org.motechproject.nms.reportfix;
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 import org.motechproject.nms.reportfix.config.ConfigReader;
 import org.motechproject.nms.reportfix.kilkari.KilkariFixer;
+import org.motechproject.nms.reportfix.logger.Logger;
 
 import java.text.ParseException;
 
@@ -12,12 +13,12 @@ import java.text.ParseException;
 public class ReportFix {
 
     public static void main(String[] args) throws ParseException{
-        System.out.println("Hello World");
+        Logger.log("Hello World");
 
-        System.out.println("Loading properties");
+        Logger.log("Loading properties");
         ConfigReader configReader = new ConfigReader();
         readConfigValues(configReader);
-        System.out.println("Loaded config");
+        Logger.log("Loaded config");
 
 
         KilkariFixer kilkariFixer = new KilkariFixer(setProdDataSource(configReader), setReportDataSource(configReader), configReader);
@@ -25,15 +26,15 @@ public class ReportFix {
     }
 
     private static void readConfigValues(ConfigReader configReader) {
-        System.out.println("CDR directory: " + configReader.getProperty("cdr.directory"));
-        System.out.println("Prod db server: " + configReader.getProperty("prod.db.server"));
-        System.out.println("Prod db name: " + configReader.getProperty("prod.db.name"));
-        System.out.println("Prod db username: " + configReader.getProperty("prod.db.username"));
-        System.out.println("Prod db password: " + configReader.getProperty("prod.db.password"));
-        System.out.println("Report db server: " + configReader.getProperty("report.db.server"));
-        System.out.println("Report db name: " + configReader.getProperty("report.db.name"));
-        System.out.println("Report db username: " + configReader.getProperty("report.db.username"));
-        System.out.println("Report db password: " + configReader.getProperty("report.db.password"));
+        Logger.log("CDR directory: " + configReader.getProperty("cdr.directory"));
+        Logger.log("Prod db server: " + configReader.getProperty("prod.db.server"));
+        Logger.log("Prod db name: " + configReader.getProperty("prod.db.name"));
+        Logger.log("Prod db username: " + configReader.getProperty("prod.db.username"));
+        Logger.log("Prod db password: " + configReader.getProperty("prod.db.password"));
+        Logger.log("Report db server: " + configReader.getProperty("report.db.server"));
+        Logger.log("Report db name: " + configReader.getProperty("report.db.name"));
+        Logger.log("Report db username: " + configReader.getProperty("report.db.username"));
+        Logger.log("Report db password: " + configReader.getProperty("report.db.password"));
     }
 
     private static MysqlDataSource setProdDataSource(ConfigReader configReader) {

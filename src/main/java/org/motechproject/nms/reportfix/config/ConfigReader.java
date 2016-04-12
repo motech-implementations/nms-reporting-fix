@@ -1,12 +1,14 @@
 package org.motechproject.nms.reportfix.config;
 
+import org.motechproject.nms.reportfix.logger.Logger;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
 /**
- * Created by kosh on 3/29/16.
+ * Config helper to get properties
  */
 public class ConfigReader {
     private static String configFileName = "config.properties";
@@ -27,7 +29,7 @@ public class ConfigReader {
                 throw new FileNotFoundException("No property file with name " + configFileName + " found");
             }
         } catch (IOException ioe) {
-            System.out.println("Unable to load config. Check file. " + ioe.toString());
+            Logger.log("Unable to load config. Check file. " + ioe.toString());
         }
     }
 
