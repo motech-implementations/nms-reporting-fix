@@ -169,12 +169,13 @@ public class CdrProcessor {
         DateFormat timeFormat = new SimpleDateFormat("HH:mm:00");
         DateFormat timeFormatStamp = new SimpleDateFormat("HH:mm:ss");
         DateFormat modificationFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String weekId = cdrRow.getContentFilename().substring(0, cdrRow.getContentFilename().indexOf(".wav"));
 
         // name casing here matches db columns. #donthatetheplayerhatethegame
         long Subscription_ID = si.getId();
         int Operator_ID = lookupCache.getOperatorId(cdrRow.getOperator());
         int Subscription_Pack_ID = si.getPackId();
-        int Campaign_ID = lookupCache.getCampaignId(cdrRow.getWeekId());
+        int Campaign_ID = lookupCache.getCampaignId(weekId);
         int Start_Date_ID = lookupCache.getDateId(dateFormat.format(cdrRow.getStartTime()));
         int End_Date_ID = lookupCache.getDateId(dateFormat.format(cdrRow.getEndTime()));
         int Start_Time_ID = lookupCache.getTimeId(timeFormat.format(cdrRow.getStartTime()));
@@ -183,7 +184,7 @@ public class CdrProcessor {
         String Call_Status = lookupCache.getCallStatus(cdrRow.getCallStatus());
         long Duration = (cdrRow.getEndTime().getTime() - cdrRow.getStartTime().getTime()) / 1000;
         String Service_Option = null;
-        int Percentage_Listened = percentageCalculator(cdrRow.getMsgStartTime(), cdrRow.getMsgEndTime(), cdrRow.getWeekId());
+        int Percentage_Listened = percentageCalculator(cdrRow.getMsgStartTime(), cdrRow.getMsgEndTime(), weekId);
         String Call_Source = "OBD";
         String Subscription_Status = "ACTIVE";
         int Duration_In_Pulse = cdrRow.getCallDurationInPulses();
