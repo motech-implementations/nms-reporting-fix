@@ -12,6 +12,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -45,6 +47,8 @@ public class CdrProcessor {
             return;
         }
 
+        TimeZone.setDefault(TimeZone.getTimeZone("GMT+5:30"));
+
         Date startTime = new Date();
         this.lookupCache = lookupCache;
         this.reporting = reporting;
@@ -52,17 +56,20 @@ public class CdrProcessor {
         List<File> files = Arrays.asList(directory.listFiles());
         Collections.sort(files);
         Logger.log(String.format("Found %d files", files.size()));
+        /*
         parallelLoadFiles(files);
-        /* int index = 1;
+        */
+        int index = 1;
         for (File currentFile : files) {
             Logger.log(String.format("Loading file %d of %d", index, files.size()));
             loadFile(currentFile);
             index += 1;
         }
-        */
+
         Date endTime = new Date();
         Logger.log("Start: " + startTime.toString() + " End: " + endTime.toString());
         Logger.log(String.format("%s processed. Total records: %d, Saved: %d, Duplicates: %d", directoryPath, totalLines, totalSaved, totalDuplicates));
+        lookupCache.printMissingCache();
     }
 
     private void parallelLoadFiles(List<File> files) {
@@ -99,6 +106,14 @@ public class CdrProcessor {
         String currentLine;
         int saved = 0;
         DateFormat logDateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        Date fileCreationTime = new Date();
+        try {
+            fileCreationTime = new Date(Files.readAttributes(currentFile.toPath(), BasicFileAttributes.class).creationTime().toMillis());
+            Logger.log("Using file creation time: " + fileCreationTime.toString());
+        } catch (IOException ioe) {
+            Logger.log("Unable to determine file creation time. Using current time as modification date");
+        }
+
 
         try (BufferedReader br = new BufferedReader(new FileReader(currentFile)); Connection repcon = this.reporting.getConnection()) {
             int lineCount = 0;
@@ -127,7 +142,7 @@ public class CdrProcessor {
                 currentRow.setOperator(properties[14].trim());
                 currentRow.setWeekId(properties[17].trim());
 
-                if (saveRow(currentRow, repcon)) {
+                if (saveRow(currentRow, repcon, fileCreationTime)) {
                     saved++;
                 }
                 lineCount++;
@@ -144,7 +159,7 @@ public class CdrProcessor {
         }
     }
 
-    private boolean saveRow(CdrRow cdrRow, Connection repcon) {
+    private boolean saveRow(CdrRow cdrRow, Connection repcon, Date modificationDate) {
         SubscriptionInfo si = lookupCache.getSubscriptionInfo(cdrRow.getSubscriptionId());
         if (si == null) {
             return false;
@@ -184,7 +199,7 @@ public class CdrProcessor {
             String query = String.format(KilkariConstants.insertCdrRowSql, Subscription_ID, Operator_ID, Subscription_Pack_ID, Campaign_ID,
                     Start_Date_ID, End_Date_ID, Start_Time_ID, End_Time_ID, State_ID, Call_Status, Duration, Service_Option, Percentage_Listened,
                     Call_Source, Subscription_Status, Duration_In_Pulse, Call_Start_Time, Call_End_Time, Attempt_Number,
-                    modificationFormat.format(Subscription_Start_Date), msg_duration, modificationFormat.format(new Date())); // change modification date?
+                    modificationFormat.format(Subscription_Start_Date), msg_duration, modificationFormat.format(modificationDate)); // change modification date?
             statement.executeUpdate(query);
         } catch (SQLException sqle) {
             // Logger.log("Could not add row: " + sqle.toString());

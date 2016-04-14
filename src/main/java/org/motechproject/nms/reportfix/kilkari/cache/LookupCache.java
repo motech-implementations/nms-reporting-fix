@@ -28,6 +28,7 @@ public class LookupCache {
     private Map<String, Integer> operatorCache;
     private Map<Integer, String> callStatusMap;
     private Map<String, SubscriptionInfo> subscriptionInfoCache;
+    private Map<String, Boolean> missingCache;
 
     private int missing;
     private int found;
@@ -42,7 +43,8 @@ public class LookupCache {
         messageDurationCache = new HashMap<>();
         operatorCache = new HashMap<>();
         callStatusMap = new HashMap<>();
-        subscriptionInfoCache = new ConcurrentHashMap<>();
+        subscriptionInfoCache = new HashMap<>();
+        missingCache = new HashMap<>();
     }
 
     /**
@@ -181,6 +183,14 @@ public class LookupCache {
         return subscriptionInfoCache.get(subscriptionId);
     }
 
+    public void printMissingCache() {
+        // TODO: look this up with old backup and fill the real cache
+        Logger.log("Missing subscription count: " + missingCache.size());
+        for (String currentId : missingCache.keySet()) {
+            Logger.log(currentId);
+        }
+    }
+
     private void fetchAndSaveSubscriptionInfo(String subscriptionId) {
         SubscriptionInfo si = null;
         try (Connection connection = this.reporting.getConnection()) {
@@ -196,6 +206,7 @@ public class LookupCache {
             }
             if (si == null) {
                 missing++;
+                missingCache.put(subscriptionId, false);
             } else {
                 found++;
             }
