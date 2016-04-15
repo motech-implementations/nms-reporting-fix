@@ -44,4 +44,15 @@ public final class KilkariConstants {
      * Query to check if subscription with id exists in reporting already
      */
     public static final String getSubscriptionRow = "SELECT count(*) FROM subscriptions WHERE SubscriptionId = '%s'";
+
+    /**
+     * Toggle safe updates on the db (like delete without using primary key)     *
+     * This is currently being used for deleting all call measures for a day while loading CDRs
+     */
+    public static final String setSafeUpdates = "SET SQL_SAFE_UPDATES = %d";
+
+    /**
+     * Used to clear out existing subscriber call records for the day when we process CDR files
+     */
+    public static final String deleteRecordsForDay = "DELETE FROM subscriber_call_measure WHERE Start_Date_ID = %d";
 }

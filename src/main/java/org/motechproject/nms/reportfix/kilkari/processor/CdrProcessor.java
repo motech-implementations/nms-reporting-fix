@@ -14,14 +14,12 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.Date;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -43,22 +41,31 @@ public class CdrProcessor {
     }
 
     public void startProcessor(String directoryPath, LookupCache lookupCache, MysqlDataSource reporting) throws ParseException {
+        Date startTime = new Date();
+
+        // no lookup, nothing to do
         if (lookupCache == null) {
             return;
         }
 
+        // set timezone
         TimeZone.setDefault(TimeZone.getTimeZone("GMT+5:30"));
 
-        Date startTime = new Date();
+        // set data sources
         this.lookupCache = lookupCache;
         this.reporting = reporting;
+
+        // disable safe updates
+        toggleSafeUpdate(reporting, false);
+
+        // start processing files
         File directory = new File(directoryPath);
         List<File> files = Arrays.asList(directory.listFiles());
         Collections.sort(files);
         Logger.log(String.format("Found %d files", files.size()));
-        /*
-        parallelLoadFiles(files);
-        */
+
+        // parallelLoadFiles(files);
+
         int index = 1;
         for (File currentFile : files) {
             Logger.log(String.format("Loading file %d of %d", index, files.size()));
@@ -69,7 +76,9 @@ public class CdrProcessor {
         Date endTime = new Date();
         Logger.log("Start: " + startTime.toString() + " End: " + endTime.toString());
         Logger.log(String.format("%s processed. Total records: %d, Saved: %d, Duplicates: %d", directoryPath, totalLines, totalSaved, totalDuplicates));
-        lookupCache.printMissingCache();
+
+        // re-enable safe updates
+        toggleSafeUpdate(reporting, true);
     }
 
     private void parallelLoadFiles(List<File> files) {
@@ -90,18 +99,32 @@ public class CdrProcessor {
         service.shutdown();
     }
 
+    /**
+     * Used to load the file and delete any existing records for the day from db
+     * @param currentFile current file to process
+     * @throws ParseException
+     */
     private void loadFile(File currentFile) throws ParseException {
-        String fileName = currentFile.getName();
-        DateFormat format = new SimpleDateFormat("yyyyMMddhhmmss");
-        Date fileDate = format.parse(fileName.split("_")[3]);
-        Logger.log(fileDate.toString());
 
+        // delete existing cdrs for date in CDR file
+        String fileName = currentFile.getName();
+        String cdrDate = fileName.split("_")[3];
+        cdrDate = cdrDate.substring(0, cdrDate.indexOf(".csv"));
+        DateFormat parseDateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        DateFormat lookupDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        deleteCdrForFileDate(lookupDateFormat.format(parseDateFormat.parse(cdrDate)));
+
+        // ingest data from CDR file
         DateFormat logDateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
         Logger.log(fileName + " Start - " + logDateFormat.format(new Date()));
         ingestFile(currentFile);
         Logger.log(fileName + " End - " + logDateFormat.format(new Date()));
     }
 
+    /**
+     * Process the file line-by-line and create a cdr row to save
+     * @param currentFile file to process
+     */
     private void ingestFile(File currentFile) {
         String currentLine;
         int saved = 0;
@@ -159,6 +182,13 @@ public class CdrProcessor {
         }
     }
 
+    /**
+     * Take a cdr row and save it to the subscr
+     * @param cdrRow row to save
+     * @param repcon connection to the reporting db
+     * @param modificationDate modification date to use. Usually the file creation time here or ETL uses prod entity modification date
+     * @return true if saved, false otherwise
+     */
     private boolean saveRow(CdrRow cdrRow, Connection repcon, Date modificationDate) {
         SubscriptionInfo si = lookupCache.getSubscriptionInfo(cdrRow.getSubscriptionId());
         if (si == null) {
@@ -230,5 +260,28 @@ public class CdrProcessor {
         }
 
         return (int)(msgEnd.getTime() - msgStart.getTime()) / 1000;
+    }
+
+    private void toggleSafeUpdate(MysqlDataSource dataSource, boolean value) {
+        try (Connection repcon = this.reporting.getConnection()) {
+            Statement statement = repcon.createStatement();
+            String query = String.format(KilkariConstants.setSafeUpdates, value ? 1 : 0);
+            statement.executeQuery(query);
+        } catch (SQLException sqe) {
+            Logger.log("Failed to toggle safe update to: " + value);
+        }
+    }
+
+    private void deleteCdrForFileDate(String fileDate) {
+        int Start_Date_ID = lookupCache.getDateId(fileDate);
+        Logger.log(String.format("Trying to delete records with date: %s and Start_Date_ID: %d", fileDate, Start_Date_ID));
+        try (Connection repcon = this.reporting.getConnection()) {
+            String query = String.format(KilkariConstants.deleteRecordsForDay, Start_Date_ID);
+            PreparedStatement statement = repcon.prepareStatement(query);
+            int deleted = statement.executeUpdate();
+            Logger.log(String.format("Deleted %d records with date: %s and Start_Date_ID: %d", deleted, fileDate, Start_Date_ID));
+        } catch (SQLException sqle) {
+            Logger.log("Could not delete subscriber call measure for day: ");
+        }
     }
 }

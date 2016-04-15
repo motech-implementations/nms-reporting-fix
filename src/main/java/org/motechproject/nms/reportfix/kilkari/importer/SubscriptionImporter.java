@@ -69,6 +69,7 @@ public class SubscriptionImporter {
         }
 
         Logger.log("Final missing subscription count: " + missingSubscriptionSet.size());
+        
     }
 
     private void loadFile(File currentFile) throws ParseException {

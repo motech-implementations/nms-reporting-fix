@@ -51,7 +51,7 @@ public class KilkariFixer {
             // getCallCount(report, "October", 2015);
             lookupCache.initialize(reporting, production);
             subscriptionImporter.startImport(directoryPath, production, reporting);
-            // cdrProcessor.startProcessor(directoryPath, lookupCache, reporting);
+            cdrProcessor.startProcessor(directoryPath, lookupCache, reporting);
         } catch (SQLException sqle) {
             Logger.log("Unable to connect to motech or reporting db: " + sqle.toString());
         }
