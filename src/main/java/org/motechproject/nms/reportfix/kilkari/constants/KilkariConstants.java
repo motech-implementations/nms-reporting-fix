@@ -39,4 +39,9 @@ public final class KilkariConstants {
             " '%s', %d, %s, %d, '%s'," +
             " '%s', %d, '%s', '%s'," +
             " %d, '%s', %d, '%s');";
+
+    /**
+     * Query to check if subscription with id exists in reporting already
+     */
+    public static final String getSubscriptionRow = "SELECT count(*) FROM subscriptions WHERE SubscriptionId = '%s'";
 }
