@@ -26,6 +26,8 @@ public class LookupCache {
     private Map<String, Integer> campaignMessageCache;
     private Map<String, Integer> messageDurationCache;
     private Map<String, Integer> operatorCache;
+    private Map<String, Integer> subscriptionPackCache;
+    private Map<String, Integer> channelCache;
     private Map<Integer, String> callStatusMap;
     private Map<String, SubscriptionInfo> subscriptionInfoCache;
     private Map<String, Boolean> missingCache;
@@ -42,6 +44,8 @@ public class LookupCache {
         campaignMessageCache = new HashMap<>();
         messageDurationCache = new HashMap<>();
         operatorCache = new HashMap<>();
+        subscriptionPackCache = new HashMap<>();
+        channelCache = new HashMap<>();
         callStatusMap = new HashMap<>();
         subscriptionInfoCache = new HashMap<>();
         missingCache = new HashMap<>();
@@ -59,6 +63,8 @@ public class LookupCache {
         initializeDateCache();
         initializeTimeCache();
         initializeOperatorCache();
+        initializeSubscriptionPackCache();
+        initializeChannelCache();
         initializeMessageDurationCache();
         initializeCampaignMessageCache();
     }
@@ -152,6 +158,36 @@ public class LookupCache {
 
     }
 
+    private void initializeSubscriptionPackCache() {
+        try (Connection connection = this.reporting.getConnection()) {
+            Statement statement = connection.createStatement();
+            ResultSet rs = statement.executeQuery(KilkariConstants.getSubscriptionPackCacheSql);
+            while (rs.next()) {
+                subscriptionPackCache.put(rs.getString("Subscription_Pack"), rs.getInt("Subscription_Pack_ID"));
+            }
+
+        } catch (SQLException sqle) {
+            Logger.log("Cannot get subscription pack cache from reporting: " + sqle.toString());
+        }
+
+        Logger.log("Subscription pack cache filled: " + subscriptionPackCache.size() + " items");
+    }
+
+    private void initializeChannelCache() {
+        try (Connection connection = this.reporting.getConnection()) {
+            Statement statement = connection.createStatement();
+            ResultSet rs = statement.executeQuery(KilkariConstants.getChannelCacheSql);
+            while (rs.next()) {
+                channelCache.put(rs.getString("Channel"), rs.getInt("ID"));
+            }
+
+        } catch (SQLException sqle) {
+            Logger.log("Cannot get Channel cache from reporting: " + sqle.toString());
+        }
+
+        Logger.log("Channel cache filled: " + channelCache.size() + " items");
+    }
+
     public String getCallStatus(int status) {
         return callStatusMap.get(status);
     }
@@ -174,6 +210,14 @@ public class LookupCache {
 
     public int getCampaignId(String weekId) {
         return campaignMessageCache.get(weekId);
+    }
+
+    public int getSubscriptionPackId(String packType) {
+        return subscriptionPackCache.get(packType);
+    }
+
+    public int getChannelId(String channel) {
+        return channelCache.get(channel);
     }
 
     public SubscriptionInfo getSubscriptionInfo (String subscriptionId) {
