@@ -10,6 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -30,7 +31,7 @@ public class LookupCache {
     private Map<String, Integer> channelCache;
     private Map<Integer, String> callStatusMap;
     private Map<String, SubscriptionInfo> subscriptionInfoCache;
-    private Map<String, Boolean> missingCache;
+    private HashSet<String> missingCache;
 
     private int missing;
     private int found;
@@ -48,7 +49,7 @@ public class LookupCache {
         channelCache = new HashMap<>();
         callStatusMap = new HashMap<>();
         subscriptionInfoCache = new HashMap<>();
-        missingCache = new HashMap<>();
+        missingCache = new HashSet<>();
     }
 
     /**
@@ -227,11 +228,14 @@ public class LookupCache {
         return subscriptionInfoCache.get(subscriptionId);
     }
 
-    public void printMissingCache() {
-        // TODO: look this up with old backup and fill the real cache
+    public void printStats() {
+        Logger.log("***Lookup cache stats***");
+        Logger.log("Subscription info cache size: " + subscriptionInfoCache.size());
         Logger.log("Missing subscription count: " + missingCache.size());
-        for (String currentId : missingCache.keySet()) {
-            Logger.log(currentId);
+
+        Logger.log("Printing missing subscriptions -");
+        for (String current : missingCache) {
+            Logger.log(current);
         }
     }
 
@@ -250,7 +254,7 @@ public class LookupCache {
             }
             if (si == null) {
                 missing++;
-                missingCache.put(subscriptionId, false);
+                missingCache.add(subscriptionId);
             } else {
                 found++;
             }

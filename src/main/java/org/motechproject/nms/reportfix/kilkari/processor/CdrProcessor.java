@@ -8,10 +8,7 @@ import org.motechproject.nms.reportfix.kilkari.domain.SubscriptionInfo;
 import org.motechproject.nms.reportfix.kilkari.helpers.Parser;
 import org.motechproject.nms.reportfix.logger.Logger;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.*;
@@ -60,7 +57,12 @@ public class CdrProcessor {
 
         // start processing files
         File directory = new File(directoryPath);
-        List<File> files = Arrays.asList(directory.listFiles());
+        List<File> files = Arrays.asList(directory.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.toLowerCase().endsWith(".csv");
+            }
+        }));
         Collections.sort(files);
         Logger.log(String.format("Found %d files", files.size()));
 

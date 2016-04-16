@@ -20,7 +20,6 @@ public class ReportFix {
         readConfigValues(configReader);
         Logger.log("Loaded config");
 
-
         KilkariFixer kilkariFixer = new KilkariFixer(setProdDataSource(configReader), setReportDataSource(configReader), configReader);
         kilkariFixer.start();
     }

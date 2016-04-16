@@ -49,9 +49,19 @@ public class KilkariFixer {
         String directoryPath = configReader.getProperty("cdr.directory");
         try (Connection prod = production.getConnection(); Connection report = reporting.getConnection()){
             // getCallCount(report, "October", 2015);
+
+            // Initialize the lookup cache
             lookupCache.initialize(reporting, production);
-            subscriptionImporter.startImport(directoryPath, production, reporting, lookupCache);
+
+            // Run the data recovery mode (currently only needed for oct & nov 2015)
+            if (configReader.getProperty("prod.subscription.recovery").compareTo("0") != 0) {
+                subscriptionImporter.startImport(directoryPath, production, reporting, lookupCache);
+            }
+
+            // Start loading the CDR files in the reporting database
             cdrProcessor.startProcessor(directoryPath, lookupCache, reporting);
+
+            lookupCache.printStats();
         } catch (SQLException sqle) {
             Logger.log("Unable to connect to motech or reporting db: " + sqle.toString());
         }
@@ -70,7 +80,7 @@ public class KilkariFixer {
             }
         } catch (SQLException sqle) {
             Logger.log("Cannot get results from db: " + sqle.toString());
-        } // todo: close statement and resultset?
+        }
     }
 
 
