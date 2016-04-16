@@ -74,6 +74,7 @@ public class CdrProcessor {
         }
 
         Date endTime = new Date();
+        Logger.log("*** CDR recovery summary ***");
         Logger.log("Start: " + startTime.toString() + " End: " + endTime.toString());
         Logger.log(String.format("%s processed. Total records: %d, Saved: %d, Duplicates: %d", directoryPath, totalLines, totalSaved, totalDuplicates));
 

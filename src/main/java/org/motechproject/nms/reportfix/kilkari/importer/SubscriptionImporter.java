@@ -56,6 +56,7 @@ public class SubscriptionImporter {
         int found = 0;
         int subscribersAdded = 0;
         int subscriptionsAdded = 0;
+        int iterator = 1;
         try (Connection prodcon = this.production.getConnection(); Connection repcon = this.reporting.getConnection()) {
             Statement statement = prodcon.createStatement();
             String query = null;
@@ -70,6 +71,10 @@ public class SubscriptionImporter {
                     if (addMissingSubscription(repcon, rs, current)) {
                         subscriptionsAdded++;
                     }
+                }
+                iterator++;
+                if (iterator % 1000 == 0) {
+                    Logger.log(String.format("Iterated %d subscriptions", iterator));
                 }
             }
         } catch (SQLException sqle) {
