@@ -119,9 +119,9 @@ public class CdrProcessor {
 
         // ingest data from CDR file
         DateFormat logDateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-        Logger.log(fileName + " Start - " + logDateFormat.format(new Date()));
+        Logger.log(" Start - " + fileName);
         ingestFile(currentFile);
-        Logger.log(fileName + " End - " + logDateFormat.format(new Date()));
+        Logger.log(" End - " + fileName);
     }
 
     /**
@@ -173,7 +173,7 @@ public class CdrProcessor {
                 }
                 lineCount++;
                 if (lineCount % 10000 == 0) {
-                    Logger.log(logDateFormat.format(new Date()) + " Progress: Read - " + lineCount + ", Saved - " + saved);
+                    Logger.log("Progress: Read - " + lineCount + ", Saved - " + saved);
                 }
             }
             Logger.log("Read " + lineCount + " lines from file: " + currentFile.getName());
