@@ -216,6 +216,7 @@ public class CdrProcessor {
         Integer State_ID = null;
         String Call_Status = lookupCache.getCallStatus(cdrRow.getCallStatus());
         long Duration = (cdrRow.getEndTime().getTime() - cdrRow.getStartTime().getTime()) / 1000;
+        Long callDuration = (Call_Status.compareTo("SUCCESS") == 0) ? (cdrRow.getEndTime().getTime() - cdrRow.getAnswerTime().getTime()) /1000 : null;
         String Service_Option = null;
         int Percentage_Listened = percentageCalculator(cdrRow.getMsgStartTime(), cdrRow.getMsgEndTime(), weekId);
         String Call_Source = "OBD";
@@ -231,7 +232,7 @@ public class CdrProcessor {
         try {
             Statement statement = repcon.createStatement();
             String query = String.format(KilkariConstants.insertCdrRowSql, Subscription_ID, Operator_ID, Subscription_Pack_ID, Campaign_ID,
-                    Start_Date_ID, End_Date_ID, Start_Time_ID, End_Time_ID, State_ID, Call_Status, Duration, Service_Option, Percentage_Listened,
+                    Start_Date_ID, End_Date_ID, Start_Time_ID, End_Time_ID, State_ID, Call_Status, Duration, callDuration, Service_Option, Percentage_Listened,
                     Call_Source, Subscription_Status, Duration_In_Pulse, Call_Start_Time, Call_End_Time, Attempt_Number,
                     modificationFormat.format(Subscription_Start_Date), msg_duration, modificationFormat.format(modificationDate)); // change modification date?
             statement.executeUpdate(query);
