@@ -58,7 +58,7 @@ public final class KilkariConstants {
     /**
      * Used to clear out existing subscriber call records for the day when we process CDR files
      */
-    public static final String deleteRecordsForDay = "DELETE FROM subscriber_call_measure WHERE Call_Source = 'IVR' AND Start_Date_ID = %d";
+    public static final String deleteRecordsForDay = "DELETE FROM subscriber_call_measure WHERE Call_Source = 'OBD' AND Start_Date_ID = %d";
 
     /**
      * used to get missing subscription info from production db
