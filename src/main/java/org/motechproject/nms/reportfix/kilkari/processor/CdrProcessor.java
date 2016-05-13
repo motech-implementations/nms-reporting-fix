@@ -271,6 +271,7 @@ public class CdrProcessor {
             Statement statement = repcon.createStatement();
             String query = String.format(KilkariConstants.setSafeUpdates, value ? 1 : 0);
             statement.executeQuery(query);
+            Logger.log("Set safe updates to: " + value);
         } catch (SQLException sqe) {
             Logger.log("Failed to toggle safe update to: " + value);
         }
