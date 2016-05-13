@@ -4,6 +4,7 @@ import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 import org.motechproject.nms.reportfix.kilkari.cache.LookupCache;
 import org.motechproject.nms.reportfix.kilkari.constants.KilkariConstants;
 import org.motechproject.nms.reportfix.kilkari.domain.CdrRow;
+import org.motechproject.nms.reportfix.kilkari.domain.FileStats;
 import org.motechproject.nms.reportfix.kilkari.domain.SubscriptionInfo;
 import org.motechproject.nms.reportfix.kilkari.helpers.Parser;
 import org.motechproject.nms.reportfix.logger.Logger;
@@ -17,10 +18,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
 /**
  * Processor to read cdr files and store them
@@ -29,10 +27,6 @@ public class CdrProcessor {
 
     private LookupCache lookupCache;
     private MysqlDataSource reporting;
-
-    private static int totalLines;
-    private static int totalDuplicates;
-    private static int totalSaved;
 
     public CdrProcessor() {
     }
@@ -66,8 +60,26 @@ public class CdrProcessor {
         Collections.sort(files);
         Logger.log(String.format("Found %d files", files.size()));
 
-        // parallelLoadFiles(files);
+        List<FileStats> results = parallelLoadFiles(files);
+        // re-enable safe updates
+        toggleSafeUpdate(reporting, true);
 
+        for (FileStats currentStat : results) {
+            Logger.log("****************");
+            Logger.log(currentStat.getFileName());
+            Logger.log(String.format("Total lines: %d", currentStat.getTotalLines()));
+            Logger.log(String.format("Total saved: %d", currentStat.getTotalSaved()));
+            Logger.log(String.format("Total dupes: %d", currentStat.getTotalDuplicates()));
+            Logger.log("Start: " + currentStat.getStartTime());
+            Logger.log("End: " + currentStat.getEndTime());
+            Logger.log("****************");
+        }
+
+        Date endTime = new Date();
+        Logger.log("*** CDR recovery summary ***");
+        Logger.log("Start: " + startTime.toString() + " End: " + endTime.toString());
+
+        /*
         int index = 1;
         for (File currentFile : files) {
             Logger.log(String.format("Loading file %d of %d", index, files.size()));
@@ -75,31 +87,36 @@ public class CdrProcessor {
             index += 1;
         }
 
-        Date endTime = new Date();
-        Logger.log("*** CDR recovery summary ***");
-        Logger.log("Start: " + startTime.toString() + " End: " + endTime.toString());
-        Logger.log(String.format("%s processed. Total records: %d, Saved: %d, Duplicates: %d", directoryPath, totalLines, totalSaved, totalDuplicates));
+        */
 
-        // re-enable safe updates
-        toggleSafeUpdate(reporting, true);
     }
 
-    private void parallelLoadFiles(List<File> files) {
+    private List<FileStats> parallelLoadFiles(List<File> files) {
         int threads = Runtime.getRuntime().availableProcessors();
+        Logger.log(String.format("Using %d thread(s) to process files", threads));
         ExecutorService service = Executors.newFixedThreadPool(threads);
 
-        List<Future<Void>> futures = new ArrayList<>();
+        List<Future<FileStats>> futures = new ArrayList<>();
         for (final File file : files) {
-            Callable<Void> callable = new Callable<Void>() {
+            Callable<FileStats> callable = new Callable<FileStats>() {
                 @Override
-                public Void call() throws Exception {
-                    loadFile(file);
-                    return null;
+                public FileStats call() throws Exception {
+                    return loadFile(file);
                 }
             };
             futures.add(service.submit(callable));
         }
         service.shutdown();
+
+        List<FileStats> outputs = new ArrayList<FileStats>();
+        for (Future<FileStats> future : futures) {
+            try {
+                outputs.add(future.get());
+            } catch (InterruptedException | ExecutionException ex) {
+                Logger.log(ex.toString());
+            }
+        }
+        return outputs;
     }
 
     /**
@@ -107,8 +124,9 @@ public class CdrProcessor {
      * @param currentFile current file to process
      * @throws ParseException
      */
-    private void loadFile(File currentFile) throws ParseException {
+    private FileStats loadFile(File currentFile) throws ParseException {
 
+        FileStats fileStats = new FileStats();
         // delete existing cdrs for date in CDR file
         String fileName = currentFile.getName();
         String cdrDate = fileName.split("_")[3];
@@ -120,15 +138,19 @@ public class CdrProcessor {
         // ingest data from CDR file
         DateFormat logDateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
         Logger.log(" Start - " + fileName);
-        ingestFile(currentFile);
+        fileStats.setFileName(fileName);
+        fileStats.setStartTime(new Date());
+        ingestFile(currentFile, fileStats);
+        fileStats.setEndTime(new Date());
         Logger.log(" End - " + fileName);
+        return fileStats;
     }
 
     /**
      * Process the file line-by-line and create a cdr row to save
      * @param currentFile file to process
      */
-    private void ingestFile(File currentFile) {
+    private void ingestFile(File currentFile, FileStats currentFileStats) {
         String currentLine;
         int saved = 0;
         DateFormat logDateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
@@ -168,7 +190,7 @@ public class CdrProcessor {
                 currentRow.setOperator(properties[14].trim());
                 currentRow.setWeekId(properties[17].trim());
 
-                if (saveRow(currentRow, repcon, fileCreationTime)) {
+                if (saveRow(currentRow, repcon, fileCreationTime, currentFileStats)) {
                     saved++;
                 }
                 lineCount++;
@@ -178,11 +200,12 @@ public class CdrProcessor {
             }
             Logger.log("Read " + lineCount + " lines from file: " + currentFile.getName());
             Logger.log("Saved " + saved + " call detail records");
-            totalLines += lineCount;
-            totalSaved += saved;
+            currentFileStats.setTotalLines(lineCount);
+            currentFileStats.setTotalSaved(saved);
         } catch (IOException|SQLException ex) {
             Logger.log(ex.toString());
         }
+
     }
 
     /**
@@ -192,7 +215,7 @@ public class CdrProcessor {
      * @param modificationDate modification date to use. Usually the file creation time here or ETL uses prod entity modification date
      * @return true if saved, false otherwise
      */
-    private boolean saveRow(CdrRow cdrRow, Connection repcon, Date modificationDate) {
+    private boolean saveRow(CdrRow cdrRow, Connection repcon, Date modificationDate, FileStats fileStats) {
         SubscriptionInfo si = lookupCache.getSubscriptionInfo(cdrRow.getSubscriptionId());
         if (si == null) {
             return false;
@@ -239,9 +262,9 @@ public class CdrProcessor {
         } catch (SQLException sqle) {
             // Logger.log("Could not add row: " + sqle.toString());
             if (sqle.toString().contains("Duplicate entry")) {
-                totalDuplicates++;
-                if (totalDuplicates % 10000 == 0) {
-                    Logger.log("Duplicates: " + totalDuplicates);
+                fileStats.setTotalDuplicates(fileStats.getTotalDuplicates() + 1);
+                if (fileStats.getTotalDuplicates() % 10000 == 0) {
+                    Logger.log("Duplicates: " + fileStats.getTotalDuplicates());
                 }
             }
             return false;

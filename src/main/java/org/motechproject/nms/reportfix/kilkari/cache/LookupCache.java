@@ -48,7 +48,7 @@ public class LookupCache {
         subscriptionPackCache = new HashMap<>();
         channelCache = new HashMap<>();
         callStatusMap = new HashMap<>();
-        subscriptionInfoCache = new HashMap<>();
+        subscriptionInfoCache = new ConcurrentHashMap<>();
         missingCache = new HashSet<>();
     }
 
