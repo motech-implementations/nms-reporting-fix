@@ -84,8 +84,8 @@ public class LookupCache {
     }
 
     private void initializeDateCache() {
-        try (Connection connection = this.reporting.getConnection()) {
-            Statement statement = connection.createStatement();
+        try (Connection connection = this.reporting.getConnection();
+             Statement statement = connection.createStatement()) {
             ResultSet rs = statement.executeQuery(KilkariConstants.getDateCacheSql);
             while (rs.next()) {
                 dateCache.put(rs.getString("FullDate"), rs.getInt("ID"));
@@ -99,8 +99,8 @@ public class LookupCache {
     }
 
     private void initializeTimeCache() {
-        try (Connection connection = this.reporting.getConnection()) {
-            Statement statement = connection.createStatement();
+        try (Connection connection = this.reporting.getConnection();
+             Statement statement = connection.createStatement()) {
             ResultSet rs = statement.executeQuery(KilkariConstants.getTimeCacheSql);
             while (rs.next()) {
                 timeCache.put(rs.getString("FullTime"), rs.getInt("ID"));
@@ -114,8 +114,8 @@ public class LookupCache {
     }
 
     private void initializeOperatorCache() {
-        try (Connection connection = this.reporting.getConnection()) {
-            Statement statement = connection.createStatement();
+        try (Connection connection = this.reporting.getConnection();
+             Statement statement = connection.createStatement()) {
             ResultSet rs = statement.executeQuery(KilkariConstants.getOperatorCacheSql);
             while (rs.next()) {
                 operatorCache.put(rs.getString("operator_code"), rs.getInt("ID"));
@@ -129,8 +129,8 @@ public class LookupCache {
     }
 
     private void initializeMessageDurationCache() {
-        try (Connection connection = this.reporting.getConnection()) {
-            Statement statement = connection.createStatement();
+        try (Connection connection = this.reporting.getConnection();
+             Statement statement = connection.createStatement()) {
             ResultSet rs = statement.executeQuery(KilkariConstants.getMessageDurationCacheSql);
             while (rs.next()) {
                 messageDurationCache.put(rs.getString("Campaign_ID"), rs.getInt("Message_Duration"));
@@ -144,8 +144,8 @@ public class LookupCache {
     }
 
     private void initializeCampaignMessageCache() {
-        try (Connection connection = this.reporting.getConnection()) {
-            Statement statement = connection.createStatement();
+        try (Connection connection = this.reporting.getConnection();
+             Statement statement = connection.createStatement()) {
             ResultSet rs = statement.executeQuery(KilkariConstants.getCampaignMessageCacheSql);
             while (rs.next()) {
                 campaignMessageCache.put(rs.getString("Campaign_ID"), rs.getInt("ID"));
@@ -160,8 +160,8 @@ public class LookupCache {
     }
 
     private void initializeSubscriptionPackCache() {
-        try (Connection connection = this.reporting.getConnection()) {
-            Statement statement = connection.createStatement();
+        try (Connection connection = this.reporting.getConnection();
+             Statement statement = connection.createStatement()) {
             ResultSet rs = statement.executeQuery(KilkariConstants.getSubscriptionPackCacheSql);
             while (rs.next()) {
                 subscriptionPackCache.put(rs.getString("Subscription_Pack"), rs.getInt("Subscription_Pack_ID"));
@@ -175,8 +175,8 @@ public class LookupCache {
     }
 
     private void initializeChannelCache() {
-        try (Connection connection = this.reporting.getConnection()) {
-            Statement statement = connection.createStatement();
+        try (Connection connection = this.reporting.getConnection();
+             Statement statement = connection.createStatement()) {
             ResultSet rs = statement.executeQuery(KilkariConstants.getChannelCacheSql);
             while (rs.next()) {
                 channelCache.put(rs.getString("Channel"), rs.getInt("ID"));
@@ -241,8 +241,9 @@ public class LookupCache {
 
     private void fetchAndSaveSubscriptionInfo(String subscriptionId) {
         SubscriptionInfo si = null;
-        try (Connection connection = this.reporting.getConnection()) {
-            Statement statement = connection.createStatement();
+        try (Connection connection = this.reporting.getConnection();
+             Statement statement = connection.createStatement()) {
+
             String query = String.format(KilkariConstants.getSubscriptionInfoSql, subscriptionId);
             ResultSet rs = statement.executeQuery(query);
 

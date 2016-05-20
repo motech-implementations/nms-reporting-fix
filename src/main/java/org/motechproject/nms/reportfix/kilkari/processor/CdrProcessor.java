@@ -141,9 +141,10 @@ public class CdrProcessor {
         }
 
 
-        try (BufferedReader br = new BufferedReader(new FileReader(currentFile)); Connection repcon = this.reporting.getConnection()) {
+        try (BufferedReader br = new BufferedReader(new FileReader(currentFile));
+             Connection repcon = this.reporting.getConnection();
+             Statement saveStatement = repcon.createStatement()) {
             int lineCount = 0;
-
             while ((currentLine = br.readLine()) != null) {
                 if (lineCount == 0) {
                     lineCount++;
@@ -168,7 +169,7 @@ public class CdrProcessor {
                 currentRow.setOperator(properties[14].trim());
                 currentRow.setWeekId(properties[17].trim());
 
-                if (saveRow(currentRow, repcon, fileCreationTime)) {
+                if (saveRow(currentRow, saveStatement, fileCreationTime)) {
                     saved++;
                 }
                 lineCount++;
@@ -188,11 +189,11 @@ public class CdrProcessor {
     /**
      * Take a cdr row and save it to the subscr
      * @param cdrRow row to save
-     * @param repcon connection to the reporting db
+     * @param statement statement to run query on reporting db
      * @param modificationDate modification date to use. Usually the file creation time here or ETL uses prod entity modification date
      * @return true if saved, false otherwise
      */
-    private boolean saveRow(CdrRow cdrRow, Connection repcon, Date modificationDate) {
+    private boolean saveRow(CdrRow cdrRow, Statement statement, Date modificationDate) {
         SubscriptionInfo si = lookupCache.getSubscriptionInfo(cdrRow.getSubscriptionId());
         if (si == null) {
             return false;
@@ -230,7 +231,6 @@ public class CdrProcessor {
 
         // add the row in sql
         try {
-            Statement statement = repcon.createStatement();
             String query = String.format(KilkariConstants.insertCdrRowSql, Subscription_ID, Operator_ID, Subscription_Pack_ID, Campaign_ID,
                     Start_Date_ID, End_Date_ID, Start_Time_ID, End_Time_ID, State_ID, Call_Status, Duration, callDuration, Service_Option, Percentage_Listened,
                     Call_Source, Subscription_Status, Duration_In_Pulse, Call_Start_Time, Call_End_Time, Attempt_Number,
