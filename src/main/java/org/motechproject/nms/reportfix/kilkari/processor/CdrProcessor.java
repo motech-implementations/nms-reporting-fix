@@ -255,7 +255,9 @@ public class CdrProcessor {
             return 0;
         }
         int contentDuration = lookupCache.getMessageDuration(weekId);
-        return ((getMessageDurationInSeconds(msgStart, msgEnd)) / contentDuration) * 100;
+        int messageDuration = getMessageDurationInSeconds(msgStart, msgEnd);
+        int percentage = (int) (messageDuration * 100.0f / contentDuration);
+        return percentage;
     }
 
     private int getMessageDurationInSeconds(Date msgStart, Date msgEnd) {
@@ -263,7 +265,7 @@ public class CdrProcessor {
             return 0;
         }
 
-        return (int)(msgEnd.getTime() - msgStart.getTime()) / 1000;
+        return (int)((msgEnd.getTime() - msgStart.getTime()) / 1000);
     }
 
     private void toggleSafeUpdate(MysqlDataSource dataSource, boolean value) {
